@@ -1,0 +1,15 @@
+#maya:
+#  packages:
+#    maya: '2022'
+#    ayon_maya: '1.0.0'
+#    red_maya_shelves: '==1.0.1'
+#    red_maya_utils: '2.3.1'
+#    animBot: ''
+#    ngskintools: ''
+#    vrayformaya: ''
+
+ipython:
+  packages:
+    ipython: ''
+    networkx: ''
+    bump2version: ''

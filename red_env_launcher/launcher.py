@@ -38,7 +38,6 @@ class EnvLauncher:
     def _resolve_rez_context(self):
         # timestamp = self._resolve_timestamp or self._resolver_config.resolve_timestamp()
         package_list = envconfig.get_package_requests(self._env_config, self._profile)
-        print(package_list)
 
         # Package paths.
         package_paths = rezconfig.nonlocal_packages_path
@@ -80,7 +79,7 @@ class EnvLauncher:
     def context(self):
         return self._context
 
-    def popen(self, command, suppress_rez_msg=True, **kwargs):
+    def popen(self, command=None, suppress_rez_msg=True, **kwargs):
         if isinstance(command, str):
             command = shlex.split(command)
         parent_environment = self.parent_environ()

@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import sys
+
+import yaml
+
+from red_env_launcher.launcher import EnvLauncher
+
+# Default profile value if not provided (to allow for listing of profiles).
+UNSPECIFIED_PROFILE = '__unspecified__'
+
+def load_config_file(config_path: str):
+    if not config_path:
+        return None
+
+    if config_path.endswith((".yaml", ".yml")):
+        with open(config_path, 'r') as f:
+            return yaml.load(f, Loader=yaml.Loader)
+    elif config_path.endswith((".json")):
+        with open(config_path, 'r') as f:
+            return json.load(f)
+    else:
+        raise ValueError('Unrecognised file type, provide JSON or YAML.')
+
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    # Required arguments.
+    parser.add_argument(
+        'profile',
+        help='Name of the profile to execute within.')
+    parser.add_argument(
+        '-c', '--command',
+        help='Command to execute. Launches an interactive shell if unspecified.')
+    parser.add_argument(
+        '-p', '--patch', default=None, nargs='+',
+        help='Packages to patch into the environment.')
+    parser.add_argument(
+        '--local', action='store_const', const=True,
+        help='Include local packages in the environment.')
+    parser.add_argument(
+        '-v', '--verbose', action='store_const', const=True,
+        help='Print verbose information.')
+    parser.add_argument(
+        '--config', default=None, type=load_config_file,
+        help='Path to a custom config file, rather then resolving from default')
+
+    args = parser.parse_args()
+
+    launcher = EnvLauncher(
+        args.profile,
+        local_packages=args.local,
+        patch_packages=args.patch,
+        config=args.config
+    )
+
+    if args.command:
+        launcher.run(args.command)
+    else:
+        proc = launcher.popen()
+        proc.wait()
+
+
+if __name__ == '__main__':
+    sys.exit(main())

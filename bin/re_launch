@@ -38,6 +38,9 @@ def main():
         '-p', '--patch', default=None, nargs='+',
         help='Packages to patch into the environment.')
     parser.add_argument(
+        '--paths', default=None, nargs='+',
+        help='Extra package paths to include in the resolve.')
+    parser.add_argument(
         '--local', action='store_const', const=True,
         help='Include local packages in the environment.')
     parser.add_argument(
@@ -53,8 +56,12 @@ def main():
         args.profile,
         local_packages=args.local,
         patch_packages=args.patch,
+        extra_package_paths=args.paths,
         config=args.config
     )
+
+    if args.verbose:
+        launcher.context().print_info()
 
     if args.command:
         launcher.run(args.command)

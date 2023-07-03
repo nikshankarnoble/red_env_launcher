@@ -6,13 +6,14 @@ import sys
 from rez.config import config as rezconfig
 from rez.resolved_context import ResolvedContext, ResolverStatus
 
-from red_env_launcher import config as envconfig
+from red_env_launcher.config import EnvironmentConfig
 
 
 def get_default_env_config():
-    return envconfig.resolve_config(
-        show_name=os.getenv('JOB'),  # TODO: Check variable names
-        department=os.getenv('DEPARTMENT'),
+    return EnvironmentConfig.resolve_config(
+        config='default',  # TODO: Decide how to source
+        project=os.getenv('JOB'),  # TODO: Check variable names
+        department=os.getenv('DEPARTMENT'),  # TODO: Check variable names
     )
 
 
@@ -31,13 +32,16 @@ class EnvLauncher:
         self._extra_package_paths = extra_package_paths
         self._patch_packages = patch_packages
         self._resolve_timestamp = timestamp
+
+        if config and isinstance(config, dict):
+            config = EnvironmentConfig(config)
         self._env_config = config or get_default_env_config()
 
         self._context = self._resolve_rez_context()
 
     def _resolve_rez_context(self):
         # timestamp = self._resolve_timestamp or self._resolver_config.resolve_timestamp()
-        package_list = envconfig.get_package_requests(self._env_config, self._profile)
+        package_list = self._env_config.get_package_requests(self._profile)
 
         # Package paths.
         package_paths = rezconfig.nonlocal_packages_path
@@ -67,19 +71,43 @@ class EnvLauncher:
             if test_packages_path:
                 package_paths.insert(0, test_packages_path)
 
-            package_paths.insert(0, rezconfig.local_packages_path)
-
             context = ResolvedContext(patched_context, package_paths=package_paths)
 
         return context
 
     def parent_environ(self):
+        """
+        The parent environment that will be passed down to the subprocess.
+        """
         return os.environ.copy()
 
     def context(self):
+        """
+        Returns the resolved Rez context that applications will be launched
+        from.
+
+        Returns:
+            (rez.ResolvedContext) the context.
+        """
         return self._context
 
     def popen(self, command=None, suppress_rez_msg=True, **kwargs):
+        """
+        Creates a subprocess.Popen for the provided command - if no command is
+        provided it will start up an interactive shell.
+
+        Args:
+            command (list[str] | str):
+                The command to execute, or None to start an interactive shell.
+            suppress_rez_msg (bool):
+                Whether to suppress the Rez environment initialise message.
+            **kwargs:
+                Any extra arguments to pass down to the execute_shell Rez API,
+                which are then passed into the subprocess.Popen constructor.
+
+        Returns:
+            (subprocess.Popen) the process object.
+        """
         if isinstance(command, str):
             command = shlex.split(command)
         parent_environment = self.parent_environ()
@@ -93,6 +121,24 @@ class EnvLauncher:
         )
 
     def run(self, command, stdout_stream=sys.stdout, **kwargs):
+        """
+        Runs the provided command in the resolved Rez context.
+
+        Args:
+            command (list[str] | str):
+                The command to run.
+            stdout_stream (io.TextIOWrapper):
+                The stream to write subprocess output interactively to. Set to
+                `None` to disable interactive print. Defaults to sys.stdout.
+            **kwargs:
+                Any extra arguments to pass down to the execute_shell Rez API,
+                which are then passed into the subprocess.Popen constructor.
+
+        Returns:
+            (subprocess.CompletedProcess)
+                An object describing the process result, with returncode and
+                stdout attributes.
+        """
         process = self.popen(
             command,
             stdout=subprocess.PIPE,

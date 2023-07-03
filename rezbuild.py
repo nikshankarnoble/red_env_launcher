@@ -2,7 +2,7 @@
 import os
 import sys
 
-from red_build_tools.rez_builder.generic import GenericBuilder
+from red_build_tools.builders.generic import GenericBuilder
 
 
 def build(source_path, build_path, install_path, targets):

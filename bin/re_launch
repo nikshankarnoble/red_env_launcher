@@ -10,6 +10,7 @@ from red_env_launcher.launcher import EnvLauncher
 # Default profile value if not provided (to allow for listing of profiles).
 UNSPECIFIED_PROFILE = '__unspecified__'
 
+
 def load_config_file(config_path: str):
     if not config_path:
         return None
@@ -66,6 +67,7 @@ def main():
     if args.command:
         launcher.run(args.command)
     else:
+        # Launch interactive shell.
         proc = launcher.popen()
         proc.wait()
 

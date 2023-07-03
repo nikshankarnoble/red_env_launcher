@@ -2,7 +2,7 @@
 
 name = 'red_env_launcher'
 
-version = '0.0.0'
+version = '0.0.1'
 
 requires = [
     '~python-3',
